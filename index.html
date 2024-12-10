@@ -3,50 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>XRP Mining via Browser</title>
+  <title>XRP Miner</title>
 </head>
 <body>
-  <h1>XRP Mining via Browser</h1>
-  <p>Worker: <span id="worker-name"></span></p>
+  <h1>Simple XRP Miner</h1>
   <p>Status: <span id="status">Idle</span></p>
-  <p>Hashrate: <span id="hashrate">0 H/s</span></p>
+  <p>Logs:</p>
+  <pre id="logs"></pre>
   <button id="start-button">Start Mining</button>
   <button id="stop-button" disabled>Stop Mining</button>
 
-  <script src="https://webminepool.com/lib/webminerpool.min.js"></script>
   <script>
-    // Replace with your pool settings
-    const poolAddress = "wss://server.webminepool.com:8181";
-    const address = "3EURCPqy66K2BuK3CdzNJDhm2vGwAp5X8p.git"; // Replace with your XRP address and worker name
-    const algorithm = "XelisHash"; // Adapt this if your pool supports XRP-compatible mining
-
-    // Initialize mining
-    const miner = new WMP.Anonymous(address, {
-      throttle: 0.2, // 20% CPU throttle
-      algorithm: algorithm,
-      wsUrl: poolAddress
-    });
-
-    // Update UI
-    document.getElementById("worker-name").innerText = address;
+    let mining = false;
+    let socket;
 
     document.getElementById("start-button").addEventListener("click", () => {
-      miner.start();
-      document.getElementById("status").innerText = "Mining started...";
-      document.getElementById("start-button").disabled = true;
-      document.getElementById("stop-button").disabled = false;
+      document.getElementById("status").innerText = "Connecting...";
+      socket = new WebSocket("wss://sha256.unmineable.com:3333"); // Exemple d'adresse
+      socket.onopen = () => {
+        document.getElementById("status").innerText = "Mining...";
+        mining = true;
+        document.getElementById("start-button").disabled = true;
+        document.getElementById("stop-button").disabled = false;
 
-      miner.on('update', (data) => {
-        document.getElementById("hashrate").innerText = `${data.hashesPerSecond.toFixed(2)} H/s`;
-      });
+        // Exemple de message d'inscription au pool
+        socket.send(JSON.stringify({
+          id: 1,
+          method: "mining.subscribe",
+          params: ["BrowserMiner/1.0"]
+        }));
+
+        // Exemple de travail envoyé au pool
+        setInterval(() => {
+          if (mining) {
+            socket.send(JSON.stringify({
+              id: 2,
+              method: "mining.submit",
+              params: ["3EURCPqy66K2BuK3CdzNJDhm2vGwAp5X8p.git", "job_id", "nonce", "result"]
+            }));
+          }
+        }, 5000); // Exemple : toutes les 5 secondes
+      };
+
+      socket.onmessage = (event) => {
+        document.getElementById("logs").innerText += `Message: ${event.data}\n`;
+      };
+
+      socket.onerror = (error) => {
+        document.getElementById("logs").innerText += `Error: ${error.message}\n`;
+      };
+
+      socket.onclose = () => {
+        document.getElementById("status").innerText = "Disconnected.";
+        mining = false;
+        document.getElementById("start-button").disabled = false;
+        document.getElementById("stop-button").disabled = true;
+      };
     });
 
     document.getElementById("stop-button").addEventListener("click", () => {
-      miner.stop();
-      document.getElementById("status").innerText = "Mining stopped.";
-      document.getElementById("start-button").disabled = false;
-      document.getElementById("stop-button").disabled = true;
-      document.getElementById("hashrate").innerText = "0 H/s";
+      mining = false;
+      if (socket) {
+        socket.close();
+      }
     });
   </script>
 </body>
