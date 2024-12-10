@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XRP Mining via Browser</title>
+</head>
+<body>
+  <h1>XRP Mining via Browser</h1>
+  <p>Worker: <span id="worker-name"></span></p>
+  <p>Status: <span id="status">Idle</span></p>
+  <p>Hashrate: <span id="hashrate">0 H/s</span></p>
+  <button id="start-button">Start Mining</button>
+  <button id="stop-button" disabled>Stop Mining</button>
+
+  <script src="https://webminepool.com/lib/webminerpool.min.js"></script>
+  <script>
+    // Replace with your pool settings
+    const poolAddress = "wss://server.webminepool.com:8181";
+    const address = "YourXRPAddress.YourWorkerName"; // Replace with your XRP address and worker name
+    const algorithm = "XelisHash"; // Adapt this if your pool supports XRP-compatible mining
+
+    // Initialize mining
+    const miner = new WMP.Anonymous(address, {
+      throttle: 0.2, // 20% CPU throttle
+      algorithm: algorithm,
+      wsUrl: poolAddress
+    });
+
+    // Update UI
+    document.getElementById("worker-name").innerText = address;
+
+    document.getElementById("start-button").addEventListener("click", () => {
+      miner.start();
+      document.getElementById("status").innerText = "Mining started...";
+      document.getElementById("start-button").disabled = true;
+      document.getElementById("stop-button").disabled = false;
+
+      miner.on('update', (data) => {
+        document.getElementById("hashrate").innerText = `${data.hashesPerSecond.toFixed(2)} H/s`;
+      });
+    });
+
+    document.getElementById("stop-button").addEventListener("click", () => {
+      miner.stop();
+      document.getElementById("status").innerText = "Mining stopped.";
+      document.getElementById("start-button").disabled = false;
+      document.getElementById("stop-button").disabled = true;
+      document.getElementById("hashrate").innerText = "0 H/s";
+    });
+  </script>
+</body>
+</html>
