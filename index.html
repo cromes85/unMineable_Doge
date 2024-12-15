@@ -41,26 +41,31 @@
         Chargement des données en cours...
     </div>
     <script>
-        const WORKER_URL = "https://www.unmineable.com/address/DEprNNmkxdPpGjV495DufYNjXJEkyLCLLJ?coin=DOGE&tab=workers";
+        const WORKER_URL = "https://cors-anywhere.herokuapp.com/https://www.unmineable.com/address/DEprNNmkxdPpGjV495DufYNjXJEkyLCLLJ?coin=DOGE&tab=workers";
 
         async function fetchData() {
-            const response = await fetch(WORKER_URL);
-            const html = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
+            try {
+                const response = await fetch(WORKER_URL);
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, "text/html");
 
-            const workers = [];
-            const workerRows = doc.querySelectorAll("table tr");
-            workerRows.forEach(row => {
-                const cells = row.querySelectorAll("td");
-                if (cells.length > 1) {
-                    const name = cells[0].innerText.trim();
-                    const speed = cells[1].innerText.trim();
-                    workers.push({ name, speed });
-                }
-            });
+                const workers = [];
+                const workerRows = doc.querySelectorAll("table tr");
+                workerRows.forEach(row => {
+                    const cells = row.querySelectorAll("td");
+                    if (cells.length > 1) {
+                        const name = cells[0].innerText.trim();
+                        const speed = cells[1].innerText.trim();
+                        workers.push({ name, speed });
+                    }
+                });
 
-            displayWorkers(workers);
+                displayWorkers(workers);
+            } catch (error) {
+                console.error("Erreur de chargement des données:", error);
+                document.getElementById("data").innerText = "Erreur lors du chargement des données. Veuillez réessayer.";
+            }
         }
 
         function displayWorkers(workers) {
