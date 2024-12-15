@@ -18,61 +18,65 @@
         }
         #data {
             margin: 20px auto;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background: #fff;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 80%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            width: 90%;
         }
         .worker {
-            margin: 10px 0;
-            font-size: 18px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            width: 200px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <h1>Unmineable Dashboard</h1>
     <div id="data">
-        <p>Chargement des données...</p>
+        Chargement des données en cours...
     </div>
-
     <script>
-        const ADDRESS = 'DEprNNmkxdPgGjV495DufYNjXJEkyLCLLJ'; // Ton adresse Unmineable
-        const COIN = 'DOGE'; // Crypto concernée
-        const REFRESH_INTERVAL = 15000; // 15 secondes en millisecondes
+        const WORKER_URL = "https://www.unmineable.com/address/DEprNNmkxdPpGjV495DufYNjXJEkyLCLLJ?coin=DOGE&tab=workers";
 
         async function fetchData() {
-            try {
-                const response = await fetch(`https://api.unmineable.com/v4/account/${ADDRESS}?coin=${COIN}`);
-                const data = await response.json();
-                displayData(data);
-            } catch (error) {
-                document.getElementById('data').innerHTML = `<p style='color: red;'>Erreur lors du chargement des données.</p>`;
-                console.error('Erreur API:', error);
-            }
-        }
+            const response = await fetch(WORKER_URL);
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
 
-        function displayData(data) {
-            if (!data || !data.data || !data.data.workers) {
-                document.getElementById('data').innerHTML = '<p>Aucune donnée disponible.</p>';
-                return;
-            }
-
-            let html = `<h2>Balance: ${data.data.balance} DOGE</h2>`;
-            html += `<h3>Workers actifs</h3>`;
-            html += `<div>`;
-
-            data.data.workers.forEach(worker => {
-                html += `<div class="worker">${worker.name} : ${worker.speed} Gh/s</div>`;
+            const workers = [];
+            const workerRows = doc.querySelectorAll("table tr");
+            workerRows.forEach(row => {
+                const cells = row.querySelectorAll("td");
+                if (cells.length > 1) {
+                    const name = cells[0].innerText.trim();
+                    const speed = cells[1].innerText.trim();
+                    workers.push({ name, speed });
+                }
             });
 
-            html += `</div>`;
-            document.getElementById('data').innerHTML = html;
+            displayWorkers(workers);
         }
 
-        fetchData(); // Premier chargement
-        setInterval(fetchData, REFRESH_INTERVAL); // Rafraîchissement toutes les 15 secondes
+        function displayWorkers(workers) {
+            const dataDiv = document.getElementById("data");
+            dataDiv.innerHTML = "";
+
+            workers.forEach(worker => {
+                const workerDiv = document.createElement("div");
+                workerDiv.className = "worker";
+                workerDiv.innerHTML = `<strong>${worker.name}</strong><br>Vitesse: ${worker.speed}`;
+                dataDiv.appendChild(workerDiv);
+            });
+        }
+
+        fetchData();
+        setInterval(fetchData, 15000);
     </script>
 </body>
 </html>
