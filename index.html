@@ -19,69 +19,21 @@
         #data {
             margin: 20px auto;
             display: flex;
-            flex-wrap: wrap;
             justify-content: center;
-            gap: 15px;
-            width: 90%;
         }
-        .worker {
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            padding: 15px;
-            width: 200px;
-            text-align: center;
+        iframe {
+            width: 90%;
+            height: 80vh;
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
         }
     </style>
 </head>
 <body>
     <h1>Unmineable Dashboard</h1>
     <div id="data">
-        Chargement des données en cours...
+        <iframe src="https://www.unmineable.com/address/DEprNNmkxdPpGjV495DufYNjXJEkyLCLLJ?coin=DOGE&tab=workers" title="Unmineable Workers"></iframe>
     </div>
-    <script>
-        const WORKER_URL = "https://cors-anywhere.herokuapp.com/https://www.unmineable.com/address/DEprNNmkxdPpGjV495DufYNjXJEkyLCLLJ?coin=DOGE&tab=workers";
-
-        async function fetchData() {
-            try {
-                const response = await fetch(WORKER_URL);
-                const html = await response.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, "text/html");
-
-                const workers = [];
-                const workerRows = doc.querySelectorAll("table tr");
-                workerRows.forEach(row => {
-                    const cells = row.querySelectorAll("td");
-                    if (cells.length > 1) {
-                        const name = cells[0].innerText.trim();
-                        const speed = cells[1].innerText.trim();
-                        workers.push({ name, speed });
-                    }
-                });
-
-                displayWorkers(workers);
-            } catch (error) {
-                console.error("Erreur de chargement des données:", error);
-                document.getElementById("data").innerText = "Erreur lors du chargement des données. Veuillez réessayer.";
-            }
-        }
-
-        function displayWorkers(workers) {
-            const dataDiv = document.getElementById("data");
-            dataDiv.innerHTML = "";
-
-            workers.forEach(worker => {
-                const workerDiv = document.createElement("div");
-                workerDiv.className = "worker";
-                workerDiv.innerHTML = `<strong>${worker.name}</strong><br>Vitesse: ${worker.speed}`;
-                dataDiv.appendChild(workerDiv);
-            });
-        }
-
-        fetchData();
-        setInterval(fetchData, 15000);
-    </script>
 </body>
 </html>
